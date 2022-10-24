@@ -3,8 +3,9 @@ package router
 import (
 	"gin-gorm-oj/service"
 
+	_ "gin-gorm-oj/docs"
+
 	"github.com/gin-gonic/gin"
-	docs "github.com/xilepeng/gin_gorm_oj/docs"
 	swaggerfiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
