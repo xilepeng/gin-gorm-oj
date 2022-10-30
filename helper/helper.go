@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jordan-wright/email"
+	uuid "github.com/satori/go.uuid"
 	"net/smtp"
 )
 
@@ -53,7 +54,7 @@ func AnalyseToken(tokenString string) (*UserClaims, error) {
 
 func SendCode(toUserEmail, code string) error {
 	e := email.NewEmail()
-	e.From = "郭心月 <lepengxi@163.com>"
+	e.From = "郭心月44 <lepengxi@163.com>"
 	e.To = []string{toUserEmail}
 	e.Subject = "验证码发送测试"
 	e.HTML = []byte("<b>乔丹</b>！您的验证码是：<b>" + code + "</b>")
@@ -61,4 +62,10 @@ func SendCode(toUserEmail, code string) error {
 	return e.SendWithTLS("smtp.163.com:465",
 		smtp.PlainAuth("", "lepengxi@163.com", "JRLFKOBTMYSJCKPO", "smtp.163.com"),
 		&tls.Config{InsecureSkipVerify: true, ServerName: "smtp.163.com"})
+}
+
+// GetUUID
+// 生成唯一码
+func GetUUID() string {
+	return uuid.NewV4().String()
 }

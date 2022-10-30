@@ -121,3 +121,13 @@ func SendCode(c *gin.Context) {
 		"msg":  "验证码发送成功！",
 	})
 }
+
+// Register
+// @Tags 公共方法
+// @Summary 注册
+// @Param email formData string true "email"
+// @Success 200 {string} json "{"code":"200","data":""}"
+// @Router /register [post]
+func Register(c *gin.Context) {
+	
+}
