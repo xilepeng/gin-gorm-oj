@@ -214,3 +214,7 @@ func Register(c *gin.Context) {
 		"data": map[string]interface{}{"token": token},
 	})
 }
+
+func GetRankList(c *gin.Context) {
+	
+}
