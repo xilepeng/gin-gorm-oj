@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"fmt"
+	"gin-gorm-oj/models"
 	"github.com/go-redis/redis/v8"
 	"testing"
 	"time"
@@ -22,6 +23,14 @@ func TestSet(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	val, err := rdb.Get(ctx, "key").Result()
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("key:", val)
+}
+
+func TestGetByModels(t *testing.T) {
+	val, err := models.RDB.Get(ctx, "key").Result()
 	if err != nil {
 		panic(err)
 	}

@@ -7,7 +7,10 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jordan-wright/email"
 	uuid "github.com/satori/go.uuid"
+	"math/rand"
 	"net/smtp"
+	"strconv"
+	"time"
 )
 
 type UserClaims struct {
@@ -56,7 +59,7 @@ func SendCode(toUserEmail, code string) error {
 	e := email.NewEmail()
 	e.From = "郭心月44 <lepengxi@163.com>"
 	e.To = []string{toUserEmail}
-	e.Subject = "验证码发送测试"
+	e.Subject = "验证码已发送，请查收"
 	e.HTML = []byte("<b>乔丹</b>！您的验证码是：<b>" + code + "</b>")
 	// 返回 EOF 时，关闭SSL重试
 	return e.SendWithTLS("smtp.163.com:465",
@@ -68,4 +71,15 @@ func SendCode(toUserEmail, code string) error {
 // 生成唯一码
 func GetUUID() string {
 	return uuid.NewV4().String()
+}
+
+// 生成验证码
+// GetRand
+func GetRand() string {
+	rand.Seed(time.Now().UnixNano())
+	s := ""
+	for i := 0; i < 6; i++ {
+		s += strconv.Itoa(rand.Intn(10))
+	}
+	return s
 }
