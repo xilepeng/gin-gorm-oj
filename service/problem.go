@@ -2,6 +2,7 @@ package service
 
 import (
 	"gin-gorm-oj/define"
+	"gin-gorm-oj/helper"
 	"gin-gorm-oj/models"
 	"log"
 	"net/http"
@@ -90,4 +91,36 @@ func GetProblemDetail(c *gin.Context) {
 		"code": 200,
 		"data": data,
 	})
+}
+
+// ProblemCreate
+// @Tags 管理员私有方法
+// @Summary 问题创建
+// @Param token header string true "token"
+// @Param title formData string true "title"
+// @Param content formData string true "content"
+// @Param max_runtime formData string true "max_runtime"
+// @Param max_mem formData string true "max_mem"
+// @Param category_ids formData array false "category_ids"
+// @Param test_case formData array true "test_case"
+// @Success 200 {string} json "{"code":"200","data":""}"
+// @Router /problem-create [post]
+func ProblemCreate(c *gin.Context) {
+	title := c.PostForm("title")
+	content := c.PostForm("content")
+	maxRuntime, _ := strconv.Atoi(c.PostForm("max_runtime"))
+	maxMemory, _ := strconv.Atoi(c.PostForm("max_memory"))
+	categoryIds := c.PostFormArray("category_ids")
+	testCases := c.PostFormArray("test_cases")
+	if title == "" || content == "" || len(categoryIds) == 0 || len(testCases) == 0 {
+		c.JSON(http.StatusOK, gin.H{
+			"code": -1,
+			"msg":  "参数不能为空",
+		})
+		return
+	}
+	identity := helper.GetUUID()
+	data := &models.ProblemBasic{
+		Identity: identity,
+	}
 }

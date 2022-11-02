@@ -14,6 +14,8 @@ func Router() *gin.Engine {
 	r := gin.Default()
 
 	// 路由规则
+
+	// 公有方法
 	// r.GET("/ping", service.Ping)
 
 	// swagger 配置
@@ -34,5 +36,7 @@ func Router() *gin.Engine {
 	// 提交记录
 	r.GET("/submit-list", service.GetSubmitList)
 
+	// 管理员私有方法
+	r.POST("/problem-create", service.ProblemCreate)
 	return r
 }
