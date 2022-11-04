@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -106,13 +107,18 @@ func GetProblemDetail(c *gin.Context) {
 // @Success 200 {string} json "{"code":"200","data":""}"
 // @Router /problem-create [post]
 func ProblemCreate(c *gin.Context) {
-	title := c.PostForm("title")
-	content := c.PostForm("content")
-	maxRuntime, _ := strconv.Atoi(c.PostForm("max_runtime"))
-	maxMemory, _ := strconv.Atoi(c.PostForm("max_memory"))
-	categoryIds := c.PostFormArray("category_ids")
-	testCases := c.PostFormArray("test_cases")
-	if title == "" || content == "" || len(categoryIds) == 0 || len(testCases) == 0 {
+	in := new(define.ProblemBasic)
+	err := c.ShouldBindJSON(in)
+	if err != nil {
+		log.Println("[JsonBind Error] : ", err)
+		c.JSON(http.StatusOK, gin.H{
+			"code": -1,
+			"msg":  "参数错误",
+		})
+		return
+	}
+
+	if in.Title == "" || in.Content == "" || len(in.ProblemCategories) == 0 || len(in.TestCases) == 0 || in.MaxRuntime == 0 || in.MaxMem == 0 {
 		c.JSON(http.StatusOK, gin.H{
 			"code": -1,
 			"msg":  "参数不能为空",
@@ -121,6 +127,54 @@ func ProblemCreate(c *gin.Context) {
 	}
 	identity := helper.GetUUID()
 	data := &models.ProblemBasic{
-		Identity: identity,
+		Identity:   identity,
+		Title:      in.Title,
+		Content:    in.Content,
+		MaxRuntime: in.MaxRuntime,
+		MaxMem:     in.MaxMem,
+		CreatedAt:  models.MyTime(time.Now()),
+		UpdatedAt:  models.MyTime(time.Now()),
 	}
+	// 处理分类
+	categoryBasics := make([]*models.ProblemCategory, 0)
+	for _, id := range in.ProblemCategories {
+		categoryBasics = append(categoryBasics, &models.ProblemCategory{
+			ProblemId:  data.ID,
+			CategoryId: uint(id),
+			CreatedAt:  models.MyTime(time.Now()),
+			UpdatedAt:  models.MyTime(time.Now()),
+		})
+	}
+	data.ProblemCategories = categoryBasics
+	// 处理测试用例
+	testCaseBasics := make([]*models.TestCase, 0)
+	for _, v := range in.TestCases {
+		// 举个例子 {"input":"1 2\n","output":"3\n"}
+		testCaseBasic := &models.TestCase{
+			Identity:        helper.GetUUID(),
+			ProblemIdentity: identity,
+			Input:           v.Input,
+			Output:          v.Output,
+			CreatedAt:       models.MyTime(time.Now()),
+			UpdatedAt:       models.MyTime(time.Now()),
+		}
+		testCaseBasics = append(testCaseBasics, testCaseBasic)
+	}
+	data.TestCases = testCaseBasics
+
+	// 创建问题
+	err = models.DB.Create(data).Error
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"code": -1,
+			"msg":  "Problem Create Error:" + err.Error(),
+		})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"code": 200,
+		"data": map[string]interface{}{
+			"identity": data.Identity,
+		},
+	})
 }

@@ -1,6 +1,7 @@
 package router
 
 import (
+	"gin-gorm-oj/middlewares"
 	"gin-gorm-oj/service"
 
 	_ "gin-gorm-oj/docs"
@@ -37,6 +38,6 @@ func Router() *gin.Engine {
 	r.GET("/submit-list", service.GetSubmitList)
 
 	// 管理员私有方法
-	r.POST("/problem-create", service.ProblemCreate)
+	r.POST("/problem-create", middlewares.AuthAdminCheck(), service.ProblemCreate)
 	return r
 }
