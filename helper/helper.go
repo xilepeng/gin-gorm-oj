@@ -4,17 +4,19 @@ import (
 	"crypto/md5"
 	"crypto/tls"
 	"fmt"
+	"gin-gorm-oj/define"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/jordan-wright/email"
 	uuid "github.com/satori/go.uuid"
 	"math/rand"
 	"net/smtp"
+	"os"
 	"strconv"
 	"time"
 )
 
 type UserClaims struct {
-	Identiey string `json:"identity"`
+	Identity string `json:"identity"`
 	Name     string `json:"name"`
 	IsAdmin  int    `json:"is_admin"`
 	jwt.RegisteredClaims
@@ -28,7 +30,7 @@ var mySigningKey = []byte("gin-gorm-oj-key")
 
 func GenerateToken(identity, name string, isAdmin int) (string, error) {
 	userClaim := &UserClaims{
-		Identiey:         identity,
+		Identity:         identity,
 		Name:             name,
 		IsAdmin:          isAdmin,
 		RegisteredClaims: jwt.RegisteredClaims{},
@@ -85,4 +87,79 @@ func GetRand() string {
 		s += strconv.Itoa(rand.Intn(10))
 	}
 	return s
+}
+
+// CodeSave
+// 保存代码
+func CodeSave(code []byte) (string, error) {
+	dirName := "code/" + GetUUID()
+	path := dirName + "/main.go"
+	err := os.Mkdir(dirName, 0777)
+	if err != nil {
+		return "", err
+	}
+	f, err := os.Create(path)
+	if err != nil {
+		return "", err
+	}
+	_, _ = f.Write(code)
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
+	return path, nil
+}
+
+// CheckGoCodeValid
+// 检查golang代码的合法性
+func CheckGoCodeValid(path string) (bool, error) {
+	//ioutil.ReadFile => os.ReadFile
+	//b, err := io.ioutil(path)
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return false, err
+	}
+	code := string(b)
+	for i := 0; i < len(code)-6; i++ {
+		if code[i:i+6] == "import" {
+			var flag byte
+			for i = i + 7; i < len(code); i++ {
+				if code[i] == ' ' {
+					continue
+				}
+				flag = code[i]
+				break
+			}
+			if flag == '(' {
+				for i = i + 1; i < len(code); i++ {
+					if code[i] == ')' {
+						break
+					}
+					if code[i] == '"' {
+						t := ""
+						for i = i + 1; i < len(code); i++ {
+							if code[i] == '"' {
+								break
+							}
+							t += string(code[i])
+						}
+						if _, ok := define.ValidGolangPackageMap[t]; !ok {
+							return false, nil
+						}
+					}
+				}
+			} else if flag == '"' {
+				t := ""
+				for i = i + 1; i < len(code); i++ {
+					if code[i] == '"' {
+						break
+					}
+					t += string(code[i])
+				}
+				if _, ok := define.ValidGolangPackageMap[t]; !ok {
+					return false, nil
+				}
+			}
+		}
+	}
+	return true, nil
 }
